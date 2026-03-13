@@ -5,7 +5,9 @@ const educationSchema = new mongoose.Schema({
   degree: { type: String, required: true },
   institution: { type: String, required: true },
   year: { type: String, required: true },
-  cgpa: { type: String }
+  cgpa: { type: String, required: false },
+  proofUrl: { type: String, required: false },
+  proofText: { type: String, required: false }
 });
 
 export default mongoose.model('Education', educationSchema);

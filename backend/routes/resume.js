@@ -4,6 +4,7 @@ import Profile from '../models/Profile.js';
 import Education from '../models/Education.js';
 import Experience from '../models/Experience.js';
 import Project from '../models/Project.js';
+import Certification from '../models/Certification.js';
 
 const router = express.Router();
 
@@ -50,6 +51,14 @@ router.post('/save', authMiddleware, async (req, res) => {
       await Project.insertMany(pdocs);
     }
 
+    const { certifications } = req.body;
+    await Certification.deleteMany({ userId });
+    const validCerts = certifications?.filter(c => c.title) || [];
+    if (validCerts.length) {
+      const cdocs = validCerts.map(c => ({ ...c, userId }));
+      await Certification.insertMany(cdocs);
+    }
+
     res.json({ message: 'Resume saved successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -63,8 +72,9 @@ router.get('/data', authMiddleware, async (req, res) => {
     const education = await Education.find({ userId });
     const experience = await Experience.find({ userId });
     const projects = await Project.find({ userId });
+    const certifications = await Certification.find({ userId });
     
-    res.json({ profile, education, experience, projects });
+    res.json({ profile, education, experience, projects, certifications });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

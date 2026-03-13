@@ -3,18 +3,15 @@ import Sidebar from '../components/Sidebar';
 import { getResumeData } from '../api';
 
 const roleSkillMap = {
-  'Software Developer': ['software development', 'programming', 'algorithms', 'data structures', 'problem solving', 'git', 'coding'],
-  'Frontend Developer': ['react', 'javascript', 'typescript', 'html', 'css', 'tailwind', 'next.js', 'redux', 'webpack', 'responsive design', 'git'],
-  'Backend Developer': ['node.js', 'express', 'python', 'java', 'sql', 'mongodb', 'rest api', 'graphql', 'docker', 'aws', 'git'],
-  'Full Stack Developer': ['react', 'node.js', 'javascript', 'typescript', 'mongodb', 'sql', 'rest api', 'docker', 'git', 'aws', 'html', 'css'],
-  'Data Scientist': ['python', 'machine learning', 'tensorflow', 'pandas', 'numpy', 'sql', 'statistics', 'deep learning', 'data visualization', 'scikit-learn'],
-  'Data Engineer': ['etl', 'data pipelines', 'spark', 'hadoop', 'sql', 'big data', 'python', 'data architecture'],
-  'DevOps Engineer': ['docker', 'kubernetes', 'aws', 'ci/cd', 'terraform', 'linux', 'jenkins', 'ansible', 'monitoring', 'git'],
-  'Mobile Developer': ['react native', 'flutter', 'swift', 'kotlin', 'javascript', 'firebase', 'rest api', 'git', 'ui/ux', 'app store deployment'],
-  'ML Engineer': ['python', 'tensorflow', 'pytorch', 'machine learning', 'deep learning', 'nlp', 'computer vision', 'mlops', 'docker', 'aws'],
-  'Cyber Security Analyst': ['security', 'network security', 'penetration testing', 'firewalls', 'encryption', 'threat analysis', 'cybersecurity'],
-  'Cloud Architect': ['aws', 'azure', 'google cloud', 'cloud infrastructure', 'architecture', 'scalability', 'serverless'],
-  'UI/UX Designer': ['figma', 'user interface', 'user experience', 'prototyping', 'adobe xd', 'wireframing', 'design systems', 'visual design']
+  'Frontend Developer': ['HTML', 'CSS', 'JavaScript', 'React', 'Git', 'REST API'],
+  'Backend Developer': ['Node.js', 'Express', 'MongoDB', 'MySQL', 'REST API', 'Docker'],
+  'Data Scientist': ['Python', 'Machine Learning', 'Pandas', 'NumPy', 'Statistics', 'TensorFlow'],
+  'Full Stack Developer': ['JavaScript', 'React', 'Node.js', 'MongoDB', 'REST API', 'Git'],
+  'Mobile Developer': ['React Native', 'Flutter', 'Swift', 'Kotlin', 'Firebase', 'Git'],
+  'DevOps Engineer': ['Docker', 'Kubernetes', 'AWS', 'CI/CD', 'Linux', 'Jenkins'],
+  'UI/UX Designer': ['Figma', 'User Interface', 'User Experience', 'Prototyping', 'Adobe XD', 'Wireframing'],
+  'ML Engineer': ['Machine Learning', 'PyTorch', 'TensorFlow', 'NLP', 'Computer Vision', 'Python'],
+  'Cyber Security Analyst': ['Security', 'Network Security', 'Penetration Testing', 'Firewalls', 'Encryption', 'Threat Analysis']
 };
 
 const SkillGap = () => {

@@ -5,7 +5,9 @@ const experienceSchema = new mongoose.Schema({
   company: { type: String, required: true },
   role: { type: String, required: true },
   duration: { type: String },
-  description: { type: String }
+  description: { type: String, required: false },
+  proofUrl: { type: String, required: false },
+  proofText: { type: String, required: false }
 });
 
 export default mongoose.model('Experience', experienceSchema);

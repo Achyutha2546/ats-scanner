@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
-import { getResumeData, getATSScore } from '../api';
+import { getResumeData, analyzeATS } from '../api';
 
 const ATSChecker = () => {
   const [resume, setResume] = useState(null);
   const [jobDesc, setJobDesc] = useState('');
+  const [targetRole, setTargetRole] = useState('');
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState('resume');
@@ -14,81 +15,35 @@ const ATSChecker = () => {
   }, []);
 
   const roleKeywords = {
-    'Software Developer': ['software development', 'programming', 'algorithms', 'data structures', 'problem solving', 'git', 'coding'],
-    'Frontend Developer': ['react', 'javascript', 'css', 'html', 'frontend', 'ui/ux', 'responsive design', 'typescript'],
-    'Backend Developer': ['node.js', 'backend', 'api', 'databases', 'sql', 'express', 'server-side', 'microservices'],
-    'Full Stack Developer': ['react', 'node.js', 'full stack', 'frontend', 'backend', 'databases', 'api', 'javascript'],
-    'Data Scientist': ['python', 'data science', 'statistics', 'machine learning', 'pandas', 'data analysis', 'r', 'data modeling'],
-    'Data Engineer': ['etl', 'data pipelines', 'spark', 'hadoop', 'sql', 'big data', 'python', 'data architecture'],
-    'DevOps Engineer': ['docker', 'kubernetes', 'aws', 'ci/cd', 'linux', 'automation', 'infrastructure', 'jenkins'],
-    'Mobile Developer': ['react native', 'flutter', 'swift', 'kotlin', 'ios', 'android', 'mobile apps', 'mobile development'],
-    'ML Engineer': ['machine learning', 'pytorch', 'tensorflow', 'deep learning', 'nlp', 'computer vision', 'mlops', 'python'],
-    'Cyber Security Analyst': ['security', 'network security', 'penetration testing', 'firewalls', 'encryption', 'threat analysis', 'cybersecurity'],
-    'Cloud Architect': ['aws', 'azure', 'google cloud', 'cloud infrastructure', 'architecture', 'scalability', 'serverless'],
-    'UI/UX Designer': ['figma', 'user interface', 'user experience', 'prototyping', 'adobe xd', 'wireframing', 'design systems', 'visual design']
+    'Frontend Developer': ['HTML', 'CSS', 'JavaScript', 'React', 'Git', 'REST API'],
+    'Backend Developer': ['Node.js', 'Express', 'MongoDB', 'MySQL', 'REST API', 'Docker'],
+    'Data Scientist': ['Python', 'Machine Learning', 'Pandas', 'NumPy', 'Statistics', 'TensorFlow'],
+    'Full Stack Developer': ['JavaScript', 'React', 'Node.js', 'MongoDB', 'REST API', 'Git'],
+    'Mobile Developer': ['React Native', 'Flutter', 'Swift', 'Kotlin', 'Firebase', 'Git'],
+    'DevOps Engineer': ['Docker', 'Kubernetes', 'AWS', 'CI/CD', 'Linux', 'Jenkins'],
+    'UI/UX Designer': ['Figma', 'User Interface', 'User Experience', 'Prototyping', 'Adobe XD', 'Wireframing'],
+    'ML Engineer': ['Machine Learning', 'PyTorch', 'TensorFlow', 'NLP', 'Computer Vision', 'Python'],
+    'Cyber Security Analyst': ['Security', 'Network Security', 'Penetration Testing', 'Firewalls', 'Encryption', 'Threat Analysis']
   };
 
   const runAnalysis = async () => {
     setLoading(true);
     try {
-      const skills = resume?.profile?.skills || [];
-      const summary = resume?.profile?.summary || '';
-      const targetRole = resume?.profile?.targetRole || '';
-      const hasExp = (resume?.experience || []).some(e => e.company && e.role);
-      const hasEdu = (resume?.education || []).some(e => e.degree && e.institution);
-      const hasProj = (resume?.projects || []).some(p => p.title);
+      // If no resume, use a scaffold so the backend can still give a "Roadmap" score
+      const resumeData = resume || { 
+        profile: { name: 'New User', summary: '', skills: [] },
+        education: [], experience: [], projects: [], certifications: [] 
+      };
 
-      const resumeText = `${summary} ${skills.join(' ')} ${(resume?.experience || []).map(e => `${e.role} ${e.description}`).join(' ')} ${(resume?.projects || []).map(p => `${p.title} ${p.description} ${(p.technologies || []).join(' ')}`).join(' ')}`.toLowerCase();
-
-      // Determine keywords to match against
-      let keywordsToMatch = [];
-      if (jobDesc.trim()) {
-        keywordsToMatch = jobDesc.toLowerCase().split(/\W+/).filter(w => w.length > 3);
-      } else if (targetRole && roleKeywords[targetRole]) {
-        keywordsToMatch = roleKeywords[targetRole];
-      }
-
-      const matched = keywordsToMatch.filter(w => resumeText.includes(w.toLowerCase()));
-      
-      // 1. Keyword matching (45%)
-      const keywordScore = keywordsToMatch.length > 0 
-        ? Math.min(Math.round((matched.length / keywordsToMatch.length) * 100), 100) 
-        : (targetRole || jobDesc.trim() ? 0 : 0);
-
-      // 2. Structure and sections (20%)
-      const sections = [
-        summary.length > 50, 
-        skills.length >= 3, 
-        hasExp, 
-        hasEdu, 
-        hasProj
-      ].filter(Boolean).length;
-      const structureScore = Math.round((sections / 5) * 100);
-
-      // 3. Impact and Action (10%)
-      const actionVerbs = ['developed', 'implemented', 'designed', 'built', 'optimized', 'created', 'managed', 'led', 'improved', 'delivered', 'architected', 'deployed'];
-      const verbCount = actionVerbs.filter(v => resumeText.includes(v)).length;
-      const verbScore = Math.min(Math.round((verbCount / 5) * 100), 100);
-
-      // 4. Formatting Quality (15%) - Base score for digital readability
-      const formatScore = 95;
-
-      // 5. Content quality (10%)
-      const contentScore = Math.min(Math.round((summary.length / 150) * 100), 100);
-
-      const atsScore = Math.round(keywordScore * 0.45 + structureScore * 0.2 + formatScore * 0.15 + verbScore * 0.1 + contentScore * 0.1);
-
-      const suggestions = [];
-      if (keywordScore < 50) suggestions.push(jobDesc.trim() ? 'Add more keywords from the job description' : `Add more keywords relevant to ${targetRole}`);
-      if (!summary) suggestions.push('Add a professional summary section');
-      if (skills.length < 5) suggestions.push('Add more relevant technical skills');
-      if (!hasExp) suggestions.push('Add work experience entries');
-      if (!hasProj) suggestions.push('Include project details with technologies used');
-      if (verbCount < 3) suggestions.push('Use more action verbs like "developed", "implemented", "designed"');
-
-      setReport({ atsScore, keywordScore, structureScore, formatScore, verbScore, contentScore, suggestions, matchedKeywords: [...new Set(matched)].slice(0, 20) });
+      // Use our NEW advanced ATS engine (Step 10)
+      const { data } = await analyzeATS({ 
+        resumeData, 
+        jobDescription: jobDesc.trim(),
+        targetRole: targetRole || resumeData.profile?.targetRole
+      });
+      setReport(data);
     } catch (err) {
-      alert('Analysis failed');
+      alert('Analysis failed: ' + (err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
     }
@@ -98,7 +53,7 @@ const ATSChecker = () => {
     <div className="mb-4">
       <div className="flex justify-between text-sm mb-2">
         <span className="text-slate-300">{label}</span>
-        <span className={`font-semibold ${score >= 70 ? 'text-emerald-400' : score >= 40 ? 'text-amber-400' : 'text-red-400'}`}>{score}%</span>
+        <span className={`font-semibold ${score >= 70 ? 'text-emerald-400' : score >= 40 ? 'text-amber-400' : 'text-red-400'}`}>{(score || 0)}%</span>
       </div>
       <div className="w-full h-2.5 bg-slate-700/50 rounded-full overflow-hidden">
         <div className={`h-full rounded-full transition-all duration-1000 ${color}`} style={{ width: `${score}%` }}></div>
@@ -120,10 +75,26 @@ const ATSChecker = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div className="glass-card" style={{ padding: '2rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-                <h3 className="text-white font-semibold">Job Description</h3>
+                <h3 className="text-white font-semibold">Job Details</h3>
                 <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded uppercase tracking-wider font-bold">Paste Below</span>
               </div>
-              <textarea className="input-field h-64 resize-none" placeholder="Paste the job description here to check keyword matching against your resume..." value={jobDesc} onChange={e => setJobDesc(e.target.value)} />
+              
+              <div className="mb-4">
+                <label className="text-xs text-slate-400 block mb-2">Target Role (Optional)</label>
+                <select 
+                  className="input-field w-full py-2" 
+                  value={targetRole} 
+                  onChange={e => setTargetRole(e.target.value)}
+                >
+                  <option value="">Auto-detect from Profile/JD</option>
+                  {Object.keys(roleKeywords).map(role => (
+                    <option key={role} value={role}>{role}</option>
+                  ))}
+                </select>
+              </div>
+
+              <label className="text-xs text-slate-400 block mb-2">Job Description</label>
+              <textarea className="input-field h-40 resize-none" placeholder="Paste the job description here to check keyword matching against your resume..." value={jobDesc} onChange={e => setJobDesc(e.target.value)} />
             </div>
             <button onClick={runAnalysis} className="btn-primary w-full justify-center text-base py-3" disabled={loading} style={{ padding: '1rem' }}>
               {loading ? (
@@ -146,8 +117,8 @@ const ATSChecker = () => {
                   <div className="relative inline-block">
                     <svg width="180" height="180" viewBox="0 0 180 180">
                       <circle cx="90" cy="90" r="78" fill="none" stroke="#1e293b" strokeWidth="12" />
-                      <circle cx="90" cy="90" r="78" fill="none" stroke="url(#atsGrad)" strokeWidth="12" strokeDasharray={`${report.atsScore * 4.9} 490`} className="score-ring" strokeLinecap="round" />
-                      <defs><linearGradient id="atsGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor={report.atsScore >= 70 ? '#10b981' : '#f59e0b'}/><stop offset="100%" stopColor={report.atsScore >= 70 ? '#0ea5e9' : '#ef4444'}/></linearGradient></defs>
+                      <circle cx="90" cy="90" r="78" fill="none" stroke="url(#atsGrad)" strokeWidth="12" strokeDasharray={`${Math.max(report.atsScore, 1) * 4.9} 490`} className="score-ring" strokeLinecap="round" />
+                      <defs><linearGradient id="atsGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor={report.atsScore >= 75 ? '#10b981' : report.atsScore >= 50 ? '#f59e0b' : '#ef4444'}/><stop offset="100%" stopColor={report.atsScore >= 75 ? '#0ea5e9' : report.atsScore >= 50 ? '#fbbf24' : '#f87171'}/></linearGradient></defs>
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <span className="text-5xl font-bold text-white">{report.atsScore}</span>
@@ -159,20 +130,20 @@ const ATSChecker = () => {
                 {/* Score Breakdown */}
                 <div className="glass-card" style={{ padding: '2rem' }}>
                   <h3 className="text-white font-semibold" style={{ marginBottom: '1.5rem' }}>Score Breakdown</h3>
-                  <ScoreBar label="Keyword Match (45%)" score={report.keywordScore} color="bg-gradient-to-r from-indigo-500 to-purple-500" />
-                  <ScoreBar label="Resume Structure (20%)" score={report.structureScore} color="bg-gradient-to-r from-emerald-500 to-teal-500" />
-                  <ScoreBar label="Formatting Quality (15%)" score={report.formatScore} color="bg-gradient-to-r from-cyan-500 to-blue-500" />
-                  <ScoreBar label="Action Verbs (10%)" score={report.verbScore} color="bg-gradient-to-r from-amber-500 to-orange-500" />
-                  <ScoreBar label="Content Quality (10%)" score={report.contentScore} color="bg-gradient-to-r from-pink-500 to-rose-500" />
+                  <ScoreBar label="Job Keyword Alignment" score={report.keywordScore} color="bg-gradient-to-r from-indigo-500 to-purple-500" />
+                  <ScoreBar label="Technical Skill Match" score={report.skillScore} color="bg-gradient-to-r from-emerald-500 to-teal-500" />
+                  <ScoreBar label="Semantic Similarity" score={report.semanticScore} color="bg-gradient-to-r from-cyan-500 to-blue-500" />
+                  <ScoreBar label="Experience Alignment" score={report.experienceScore} color="bg-gradient-to-r from-amber-500 to-orange-500" />
+                  <ScoreBar label="Resume Structure Quality" score={report.structureScore} color="bg-gradient-to-r from-pink-500 to-rose-500" />
                 </div>
 
-                {/* Matched Keywords */}
-                {report.matchedKeywords?.length > 0 && (
+                {/* Missing Skills */}
+                {report.missingSkills?.length > 0 && (
                   <div className="glass-card" style={{ padding: '2rem' }}>
-                    <h3 className="text-white font-semibold" style={{ marginBottom: '1rem' }}>Matched Keywords</h3>
+                    <h3 className="text-white font-semibold" style={{ marginBottom: '1rem' }}>Missing Key Skills</h3>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      {report.matchedKeywords.map((kw, i) => (
-                        <span key={i} className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 rounded-lg text-xs font-medium">{kw}</span>
+                      {report.missingSkills.map((skill, i) => (
+                        <span key={i} className="px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-300 rounded-lg text-xs font-medium">{skill}</span>
                       ))}
                     </div>
                   </div>

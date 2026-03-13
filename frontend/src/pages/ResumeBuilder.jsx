@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { saveResume, getResumeData, rewriteDescription } from '../api';
 
@@ -8,7 +9,7 @@ const ResumeBuilder = () => {
   const [saved, setSaved] = useState(false);
   const [aiLoading, setAiLoading] = useState(null);
 
-  const [profile, setProfile] = useState({ targetRole: '', summary: '', skills: '', linkedin: '', github: '', portfolioLink: '', phone: '' });
+  const [profile, setProfile] = useState({ name: '', email: '', phone: '', location: '', website: '', dob: '', targetRole: '', summary: '', skills: '', linkedin: '', github: '', portfolioLink: '' });
   const [education, setEducation] = useState([{ degree: '', institution: '', year: '', cgpa: '' }]);
   const [experience, setExperience] = useState([{ company: '', role: '', duration: '', description: '' }]);
   const [projects, setProjects] = useState([{ title: '', description: '', technologies: '', githubLink: '' }]);
@@ -55,10 +56,23 @@ const ResumeBuilder = () => {
     const load = async () => {
       try {
         const { data } = await getResumeData();
-        if (data.profile) setProfile({ ...profile, ...data.profile, skills: (data.profile.skills || []).join(', ') });
+        if (data.profile) {
+          setProfile(prev => ({
+            ...prev,
+            ...data.profile,
+            skills: (data.profile.skills || []).join(', '),
+            name: data.profile.name || '',
+            email: data.profile.email || '',
+            phone: data.profile.phone || '',
+            location: data.profile.location || '',
+            website: data.profile.website || '',
+            dob: data.profile.dob || '',
+          }));
+        }
         if (data.education?.length) setEducation(data.education);
         if (data.experience?.length) setExperience(data.experience);
         if (data.projects?.length) setProjects(data.projects.map(p => ({ ...p, technologies: (p.technologies || []).join(', ') })));
+        if (data.certifications?.length) setCertifications(data.certifications);
       } catch (err) { /* no data yet */ }
     };
     load();
@@ -68,15 +82,22 @@ const ResumeBuilder = () => {
     setSaving(true);
     try {
       await saveResume({
-        profile: { ...profile, skills: profile.skills.split(',').map(s => s.trim()).filter(Boolean) },
+        profile: {
+          ...profile,
+          skills: profile.skills.split(',').map(s => s.trim()).filter(Boolean),
+        },
         education,
         experience,
-        projects: projects.map(p => ({ ...p, technologies: p.technologies.split(',').map(t => t.trim()).filter(Boolean) })),
+        projects: projects.map(p => ({
+          ...p,
+          technologies: p.technologies.split(',').map(t => t.trim()).filter(Boolean),
+        })),
+        certifications,
       });
       setSaved(true);
-      setTimeout(() => setSaved(false), 8000);
+      setTimeout(() => setSaved(false), 4000);
     } catch (err) {
-      alert('Failed to save');
+      alert('Failed to save resume. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -89,6 +110,25 @@ const ResumeBuilder = () => {
       callback(data.result);
     } catch (err) {
       alert('AI rewrite failed');
+    } finally {
+      setAiLoading(null);
+    }
+  };
+
+  const handleProofUpload = async (e, setter, idx) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('proof', file);
+
+    try {
+      setAiLoading(`proof-${idx}`);
+      const { data } = await uploadProof(formData);
+      updateItem(setter, idx, 'proofUrl', data.proofUrl);
+      updateItem(setter, idx, 'proofText', data.proofText);
+    } catch (err) {
+      alert('Proof upload failed');
     } finally {
       setAiLoading(null);
     }
@@ -134,32 +174,87 @@ const ResumeBuilder = () => {
 
         {/* Personal Info */}
         {activeTab === 'personal' && (
-          <div className="glass-card fade-in" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="glass-card fade-in" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
             <h2 className="text-lg font-semibold text-white">Personal Information</h2>
-            
-            <div style={{ marginBottom: '0.5rem' }}>
+
+            {/* Row 1: Name & Email */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
+              <div>
+                <label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>Full Name <span className="text-red-400">*</span></label>
+                <input className="input-field" placeholder="John Doe" value={profile.name} onChange={e => setProfile({...profile, name: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>Email Address <span className="text-red-400">*</span></label>
+                <input className="input-field" type="email" placeholder="john@example.com" value={profile.email} onChange={e => setProfile({...profile, email: e.target.value})} />
+              </div>
+            </div>
+
+            {/* Row 2: Phone, Location & DOB */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+              <div>
+                <label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>Phone Number <span className="text-red-400">*</span></label>
+                <input className="input-field" placeholder="+91 9876543210" value={profile.phone} onChange={e => setProfile({...profile, phone: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>Location / City</label>
+                <input className="input-field" placeholder="Bangalore, India" value={profile.location} onChange={e => setProfile({...profile, location: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>Date of Birth</label>
+                <input className="input-field" type="date" value={profile.dob} onChange={e => setProfile({...profile, dob: e.target.value})} />
+              </div>
+            </div>
+
+            {/* Row 3: Target Role */}
+            <div>
               <label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>Target Role</label>
               <select className="input-field" value={profile.targetRole} onChange={e => setProfile({...profile, targetRole: e.target.value})}>
                 <option value="">Select Target Role...</option>
                 {roles.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
-              <p className="text-xs text-slate-500" style={{ marginTop: '0.5rem' }}>Selecting a role helps us tailor your ATS score and recommendations.</p>
+              <p className="text-xs text-slate-500" style={{ marginTop: '0.5rem' }}>Selecting a role helps tailor your ATS score and skill recommendations.</p>
             </div>
 
+            {/* Row 4: LinkedIn, GitHub, Portfolio, Website */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
-              <div><label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>Phone</label><input className="input-field" placeholder="+91 9876543210" value={profile.phone} onChange={e => setProfile({...profile, phone: e.target.value})} /></div>
-              <div><label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>LinkedIn URL</label><input className="input-field" placeholder="https://linkedin.com/in/yourname" value={profile.linkedin} onChange={e => setProfile({...profile, linkedin: e.target.value})} /></div>
-              <div><label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>GitHub URL</label><input className="input-field" placeholder="https://github.com/yourname" value={profile.github} onChange={e => setProfile({...profile, github: e.target.value})} /></div>
-              <div><label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>Portfolio Link</label><input className="input-field" placeholder="https://yourportfolio.com" value={profile.portfolioLink} onChange={e => setProfile({...profile, portfolioLink: e.target.value})} /></div>
+              <div>
+                <label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>LinkedIn URL</label>
+                <input className="input-field" placeholder="https://linkedin.com/in/yourname" value={profile.linkedin} onChange={e => setProfile({...profile, linkedin: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>GitHub URL</label>
+                <input className="input-field" placeholder="https://github.com/yourname" value={profile.github} onChange={e => setProfile({...profile, github: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>Portfolio Link</label>
+                <input className="input-field" placeholder="https://yourportfolio.com" value={profile.portfolioLink} onChange={e => setProfile({...profile, portfolioLink: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>Personal Website</label>
+                <input className="input-field" placeholder="https://yourwebsite.com" value={profile.website} onChange={e => setProfile({...profile, website: e.target.value})} />
+              </div>
             </div>
+
+            {/* Professional Summary */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <label className="text-sm text-slate-300">Professional Summary</label>
-                <button onClick={() => handleAIRewrite(profile.summary, (result) => setProfile({...profile, summary: result}), 'summary')} className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1" disabled={!!aiLoading}>
+                <button
+                  onClick={() => handleAIRewrite(profile.summary, (result) => setProfile({...profile, summary: result}), 'summary')}
+                  className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
+                  disabled={!!aiLoading}
+                >
                   {aiLoading === 'summary' ? '✨ Rewriting...' : '✨ AI Enhance'}
                 </button>
               </div>
-              <textarea className="input-field h-32 resize-none" placeholder="Write a professional summary about yourself..." value={profile.summary} onChange={e => setProfile({...profile, summary: e.target.value})} />
+              <textarea
+                className="input-field resize-none"
+                style={{ height: '120px' }}
+                placeholder="Write a professional summary about yourself — your experience, skills, and career goals..."
+                value={profile.summary}
+                onChange={e => setProfile({...profile, summary: e.target.value})}
+              />
+              <p className="text-xs text-slate-500" style={{ marginTop: '0.4rem' }}>Tip: A strong summary is 3–4 sentences highlighting your top skills and achievements.</p>
             </div>
           </div>
         )}
@@ -325,6 +420,14 @@ const ResumeBuilder = () => {
                   <div><label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>Title</label><input className="input-field" placeholder="AWS Certified Developer" value={cert.title} onChange={e => updateItem(setCertifications, idx, 'title', e.target.value)} /></div>
                   <div><label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>Organization</label><input className="input-field" placeholder="Amazon" value={cert.organization} onChange={e => updateItem(setCertifications, idx, 'organization', e.target.value)} /></div>
                   <div><label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>Year</label><input className="input-field" placeholder="2024" value={cert.year} onChange={e => updateItem(setCertifications, idx, 'year', e.target.value)} /></div>
+                  <div style={{ gridColumn: 'span 3' }} className="mt-2">
+                    <label className="block text-sm text-slate-500 mb-2">Upload Certificate (Proof)</label>
+                    <div className="flex items-center gap-4">
+                      <input type="file" onChange={e => handleProofUpload(e, setCertifications, `cert-${idx}`)} className="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 cursor-pointer" />
+                      {cert.proofUrl && <span className="text-emerald-400 text-xs font-medium px-2 py-1 bg-emerald-500/10 rounded-lg">✓ Certificate Uploaded</span>}
+                      {aiLoading === `proof-cert-${idx}` && <span className="text-indigo-400 text-xs animate-pulse">OCR Extraction in progress...</span>}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}

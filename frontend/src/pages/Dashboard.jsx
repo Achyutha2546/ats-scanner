@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getResumeData } from '../api';
+import { getResumeData, analyzeATS } from '../api';
 import Sidebar from '../components/Sidebar';
 
 const Dashboard = () => {
@@ -10,27 +10,25 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [atsScore, setAtsScore] = useState(0);
 
-  const roleKeywords = {
-    'Software Developer': ['software development', 'programming', 'algorithms', 'data structures', 'git'],
-    'Frontend Developer': ['react', 'javascript', 'css', 'html', 'frontend', 'ui/ux', 'typescript'],
-    'Backend Developer': ['node.js', 'backend', 'api', 'databases', 'sql', 'express'],
-    'Full Stack Developer': ['react', 'node.js', 'full stack', 'frontend', 'backend', 'javascript'],
-    'Data Scientist': ['python', 'data science', 'statistics', 'machine learning', 'pandas'],
-    'Data Engineer': ['etl', 'data pipelines', 'spark', 'hadoop', 'sql', 'python'],
-    'DevOps Engineer': ['docker', 'kubernetes', 'aws', 'ci/cd', 'linux', 'automation'],
-    'Mobile Developer': ['react native', 'flutter', 'swift', 'kotlin', 'ios', 'android'],
-    'ML Engineer': ['machine learning', 'pytorch', 'tensorflow', 'deep learning', 'python'],
-    'Cyber Security Analyst': ['security', 'network security', 'penetration testing', 'encryption'],
-    'Cloud Architect': ['aws', 'azure', 'google cloud', 'cloud infrastructure'],
-    'UI/UX Designer': ['figma', 'user interface', 'user experience', 'prototyping', 'design systems']
-  };
+
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const { data } = await getResumeData();
         setResume(data);
-        if (data) calculateAtsScore(data);
+        if (data) {
+          try {
+            const analysis = await analyzeATS({
+              resumeData: data,
+              jobDescription: '', // Default roadmap analysis
+              targetRole: data.profile?.targetRole
+            });
+            setAtsScore(analysis.data.atsScore);
+          } catch (e) {
+            console.error("Dashboard analysis failed:", e);
+          }
+        }
       } catch (err) {
         console.log('No resume data yet');
       } finally {
@@ -40,37 +38,7 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  const calculateAtsScore = (data) => {
-    const skills = data.profile?.skills || [];
-    const summary = data.profile?.summary || '';
-    const targetRole = data.profile?.targetRole || '';
-    const hasExp = (data.experience || []).some(e => e.company && e.role);
-    const hasEdu = (data.education || []).some(e => e.institution && e.degree);
-    const hasProj = (data.projects || []).some(p => p.title);
 
-    // Profile completeness (30%)
-    const sectionsScore = ([
-      summary.length > 50, 
-      skills.length >= 3, 
-      hasExp, 
-      hasEdu, 
-      hasProj
-    ].filter(Boolean).length / 5) * 30;
-
-    // Content relevance (70%)
-    let relevanceScore = 0;
-    if (targetRole && roleKeywords[targetRole]) {
-      const resumeText = `${summary} ${skills.join(' ')} ${(data.experience || []).map(e => `${e.role} ${e.description}`).join(' ')}`.toLowerCase();
-      const targetKws = roleKeywords[targetRole];
-      const matches = targetKws.filter(kw => resumeText.includes(kw.toLowerCase())).length;
-      relevanceScore = (matches / targetKws.length) * 70;
-    } else if (!targetRole) {
-      // If no role is selected, we can't judge relevance, so the score is capped at structural quality
-      relevanceScore = 0;
-    }
-
-    setAtsScore(Math.round(sectionsScore + relevanceScore));
-  };
 
   const profileCompletion = () => {
     if (!resume) return 0;

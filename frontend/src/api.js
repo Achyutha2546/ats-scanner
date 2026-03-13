@@ -13,6 +13,8 @@ export const loginUser = (data) => API.post('/auth/login', data);
 export const saveResume = (data) => API.post('/resume/save', data);
 export const getResumeData = () => API.get('/resume/data');
 export const rewriteDescription = (input) => API.post('/ai/rewrite-description', { input });
+export const uploadProof = (formData) => API.post('/ai/upload-proof', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const getATSScore = (data) => API.post('/ai/ats-score', data);
+export const analyzeATS = (data) => API.post('/ai/ats/analyze', data);
 
 export default API;

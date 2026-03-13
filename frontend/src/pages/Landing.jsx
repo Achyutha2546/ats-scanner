@@ -22,7 +22,7 @@ const Landing = () => {
 
       {/* Navbar */}
       <nav className="relative z-10 glass border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="w-full px-10 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -39,7 +39,7 @@ const Landing = () => {
       </nav>
 
       {/* Hero */}
-      <section className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-32 text-center">
+      <section className="relative z-10 w-full px-10 pt-20 pb-32 text-center flex flex-col items-center">
         <div className="slide-up">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-sm font-medium mb-8">
             <span className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse"></span>
@@ -73,12 +73,12 @@ const Landing = () => {
       </section>
 
       {/* Features */}
-      <section className="relative z-10 max-w-7xl mx-auto px-6 pb-32">
+      <section className="relative z-10 w-full px-10 pb-32 flex flex-col items-center">
         <h2 className="text-3xl font-bold text-white text-center mb-4">Everything You Need</h2>
         <p className="text-slate-400 text-center mb-16 max-w-xl mx-auto">Powerful AI tools to supercharge your career journey from resume to job offer.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full" style={{ maxWidth: '1200px' }}>
           {features.map((f, i) => (
-            <div key={i} className="glass-card p-6" style={{ animationDelay: `${i * 0.1}s` }}>
+            <div key={i} className="glass-card p-6 text-center" style={{ animationDelay: `${i * 0.1}s` }}>
               <div className="text-4xl mb-4">{f.icon}</div>
               <h3 className="text-lg font-semibold text-white mb-2">{f.title}</h3>
               <p className="text-slate-400 text-sm leading-relaxed">{f.desc}</p>
@@ -89,7 +89,7 @@ const Landing = () => {
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-white/5 py-8">
-        <div className="max-w-7xl mx-auto px-6 text-center text-slate-500 text-sm">
+        <div className="w-full px-10 text-center text-slate-500 text-sm">
           &copy; 2026 ResumeAI. Built with AI-powered intelligence.
         </div>
       </footer>
