@@ -11,6 +11,7 @@ import SkillGap from './pages/SkillGap';
 import Career from './pages/Career';
 import Templates from './pages/Templates';
 import Portfolio from './pages/Portfolio';
+import DescriptionEnhancer from './pages/DescriptionEnhancer';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -46,6 +47,7 @@ function App() {
           <Route path="/skill-gap" element={<PrivateRoute><SkillGap /></PrivateRoute>} />
           <Route path="/career" element={<PrivateRoute><Career /></PrivateRoute>} />
           <Route path="/portfolio" element={<PrivateRoute><Portfolio /></PrivateRoute>} />
+          <Route path="/description-enhancer" element={<PrivateRoute><DescriptionEnhancer /></PrivateRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

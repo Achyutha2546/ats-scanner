@@ -139,6 +139,66 @@ const localRewrite = (input) => {
   return rewritten.join(' ');
 };
 
+// Enhanced description endpoint with multiple modes
+router.post('/enhance-description', authMiddleware, async (req, res) => {
+  try {
+    const { input, mode = 'experience' } = req.body;
+
+    if (!input || !input.trim()) {
+      return res.status(400).json({ error: 'Please provide text to enhance.' });
+    }
+
+    const systemPrompts = {
+      experience: `You are an expert resume writer specializing in ATS-optimized content. Rewrite the following experience/work bullet point to be:
+- Written with strong, quantifiable action verbs (Led, Developed, Optimized, Delivered, etc.)
+- Concise but impactful (1-3 sentences max)
+- ATS-friendly with relevant industry keywords
+- Results-oriented with measurable outcomes where possible
+- Written in past tense, third person (no "I" or "My")
+- Natural and human-sounding, not robotic
+Fix all grammar, spelling, and punctuation errors. Return ONLY the rewritten bullet point(s), no explanations.`,
+
+      jobDescription: `You are an expert HR and recruitment specialist. Rewrite the following job description to be:
+- ATS-optimized with clear, searchable keywords
+- Well-structured with action-oriented language
+- Free of jargon and unnecessarily complex language
+- Professional yet engaging and human-readable
+- Including relevant industry-standard terminology
+- Clear about responsibilities and required qualifications
+Fix all grammar, spelling, and punctuation errors. Return ONLY the rewritten job description, no explanations.`,
+
+      summary: `You are an expert career coach and resume writer. Rewrite the following professional summary/profile to be:
+- Compelling and attention-grabbing in the first sentence
+- ATS-optimized with role-specific keywords
+- Concise (3-5 sentences maximum)
+- Highlighting key strengths, experience level, and value proposition
+- Written in first person without using "I" (e.g., "Results-driven engineer with...")
+- Natural, confident, and human-sounding
+Fix all grammar, spelling, and punctuation errors. Return ONLY the rewritten summary, no explanations.`
+    };
+
+    const systemPrompt = systemPrompts[mode] || systemPrompts.experience;
+
+    if (!isValidApiKey(process.env.OPENAI_API_KEY)) {
+      return res.json({ result: localRewrite(input), source: 'local' });
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: input }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000,
+    });
+    res.json({ result: response.choices[0].message.content, source: 'ai' });
+  } catch (err) {
+    console.error('Enhance description error:', err.message);
+    res.json({ result: localRewrite(req.body.input), source: 'local' });
+  }
+});
+
 router.post('/rewrite-description', authMiddleware, async (req, res) => {
   try {
     const { input } = req.body;

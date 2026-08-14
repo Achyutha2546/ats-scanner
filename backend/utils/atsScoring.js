@@ -231,128 +231,86 @@ const calculateSkillScore = (userSkills, jdText, targetRole) => {
   };
 };
 
-// NEW Advanced ATS Scoring Engine
+import { spawnSync } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// NEW Advanced ATS Scoring Engine (Integrated with Python)
 export const calculateATSScore = async (resumeDataRaw, jobDescriptionRaw, explicitRole) => {
-  const aggregated = aggregateResumeData(resumeDataRaw);
-  const targetRole = explicitRole || aggregated.name ? aggregated.raw?.profile?.targetRole : null;
-  const resumeText = aggregated.contentText; // Use content only, skip name/targetRole for keyword match
-  const jdText = (jobDescriptionRaw || '').toLowerCase();
-  
-  // Content Penalty for nearly empty resumes
-  const contentPenalty = resumeText.length < 200 ? (resumeText.length / 200) : 1;
-
-  // STEP 2: Job Keyword Alignment
-  const keywordScore = calculateKeywordScore(resumeText, jobDescriptionRaw || '');
-
-  // STEP 3: Role-Based Technical Skill Match
-  const skillResults = calculateSkillScore(aggregated.skills, jobDescriptionRaw, targetRole);
-  const skillScore = typeof skillResults === 'number' ? skillResults : (skillResults.score || 0);
-  const missingSkills = skillResults.missing || [];
-
-  // STEP 4: Semantic Similarity (Embeddings)
-  let semanticScore = 0;
-  const resumeEmb = await getEmbeddings(resumeText);
-  const jdEmb = await getEmbeddings(jobDescriptionRaw);
-  
-  if (resumeEmb && jdEmb) {
-    semanticScore = cosineSimilarity(resumeEmb, jdEmb) * 100;
-  } else {
-    // Fallback to TF-IDF Cosine Similarity
-    const tfidf = new natural.TfIdf();
-    tfidf.addDocument(cleanAndLemmatize(resumeText));
-    tfidf.addDocument(cleanAndLemmatize(jobDescriptionRaw));
+    const aggregated = aggregateResumeData(resumeDataRaw);
+    const targetRole = explicitRole || (aggregated.raw?.profile?.targetRole || "");
+    const resumeText = aggregated.contentText;
+    const jdText = jobDescriptionRaw || "";
     
-    const terms = new Set();
-    const vec1 = {};
-    const vec2 = {};
-    tfidf.listTerms(0).forEach(item => { terms.add(item.term); vec1[item.term] = item.tfidf; });
-    tfidf.listTerms(1).forEach(item => { terms.add(item.term); vec2[item.term] = item.tfidf; });
-    
-    let dot = 0, m1 = 0, m2 = 0;
-    terms.forEach(t => {
-      const v1 = vec1[t] || 0, v2 = vec2[t] || 0;
-      dot += v1 * v2; m1 += v1 * v1; m2 += v2 * v2;
-    });
-    if (m1 > 0 && m2 > 0) semanticScore = (dot / (Math.sqrt(m1) * Math.sqrt(m2))) * 100;
-  }
+    // Prepare input for Python script
+    const pythonInput = {
+        resume_text: resumeText,
+        job_description: jdText,
+        skills: aggregated.skills || [],
+        projects_text: aggregated.projectDescriptions || "",
+        experience_text: aggregated.experienceDescriptions || "",
+        target_role: targetRole
+    };
 
-  // STEP 5: Experience Alignment
-  const expMatchJD = jdText.match(/(\d+)\+?\s*years?(?:\s+of)?\s+experience/);
-  const reqYears = expMatchJD ? parseInt(expMatchJD[1]) : 0;
-  
-  let totalResumeYears = 0;
-  const rawExperience = aggregated.raw?.experience || [];
-  rawExperience.forEach(exp => {
-    const start = exp.duration?.match(/(20\d{2})/);
-    const end = exp.duration?.match(/[-–to]+\s*(20\d{2}|present|now|current)/i);
-    if (start) {
-      const sY = parseInt(start[1]);
-      let eY = new Date().getFullYear();
-      if (end && !/present|now|current/i.test(end[1])) eY = parseInt(end[1]);
-      totalResumeYears += Math.max(0, eY - sY);
+    try {
+        const pythonScriptPath = path.join(__dirname, '..', '..', 'ats_engine', 'scoring.py');
+        const pythonProcess = spawnSync('python', [pythonScriptPath, JSON.stringify(pythonInput)]);
+        
+        if (pythonProcess.error) {
+            console.error('Python child process error:', pythonProcess.error);
+            throw new Error('Failed to run ATS engine');
+        }
+
+        const stdout = pythonProcess.stdout.toString();
+        const stderr = pythonProcess.stderr.toString();
+
+        if (stderr && !stdout) {
+            console.error('Python stderr:', stderr);
+            throw new Error(`ATS Engine Error: ${stderr}`);
+        }
+
+        const result = JSON.parse(stdout);
+        
+        // Map Python results to expected frontend schema if necessary
+        // The requested fields are:
+        // { score, keyword_score, semantic_score, skill_score, evidence_score, matched_skills, missing_skills, suggestions, role_ranking }
+        
+        return {
+            atsScore: result.score || 0,
+            score: result.score || 0, // Frontend might use 'score' or 'atsScore'
+            keywordScore: result.keyword_score || 0,
+            keyword_score: result.keyword_score || 0,
+            semanticScore: result.semantic_score || 0,
+            semantic_score: result.semantic_score || 0,
+            skillScore: result.skill_score || 0,
+            skill_score: result.skill_score || 0,
+            evidenceScore: result.evidence_score || 0,
+            evidence_score: result.evidence_score || 0,
+            matchedSkills: result.matched_skills || [],
+            matched_skills: result.matched_skills || [],
+            missingSkills: result.missing_skills || [],
+            missing_skills: result.missing_skills || [],
+            suggestions: result.suggestions || [],
+            roleRanking: result.role_ranking || [],
+            role_ranking: result.role_ranking || []
+        };
+    } catch (error) {
+        console.error('Error in ATS scoring integration:', error);
+        return {
+            atsScore: 0,
+            score: 0,
+            keyword_score: 0,
+            semantic_score: 0,
+            skill_score: 0,
+            evidence_score: 0,
+            matched_skills: [],
+            missing_skills: [],
+            suggestions: ["Error calculating score. Please try again later."],
+            role_ranking: []
+        };
     }
-  });
-
-  let experienceScore = 0;
-  const hasExpSection = aggregated.sections.experience;
-  
-  if (reqYears === 0) {
-    experienceScore = (totalResumeYears > 0 && hasExpSection) ? 100 : (hasExpSection ? 50 : 0);
-  } else {
-    experienceScore = hasExpSection ? Math.min(totalResumeYears / reqYears, 1) * 100 : 0;
-  }
-  if (!hasExpSection || (totalResumeYears === 0 && reqYears > 0)) experienceScore = 0;
-
-  // STEP 6: Resume Structure Quality
-  let structureScore = 0;
-  const sections = aggregated.sections;
-  if (sections.summary) structureScore += 20;
-  if (sections.skills) structureScore += 20;
-  if (sections.projects) structureScore += 20;
-  if (sections.experience) structureScore += 20;
-  if (sections.education) structureScore += 20;
-
-  // STEP 7: Final ATS Score Calculation (Weighted)
-  // Keyword Alignment = 30%
-  // Technical Skill Match = 25%
-  // Semantic Similarity = 20%
-  // Experience Alignment = 15%
-  // Resume Structure = 10%
-  
-  const finalATSScore = Math.round(
-    (0.30 * (keywordScore || 0) +
-     0.25 * (skillScore || 0) +
-     0.20 * (semanticScore || 0) +
-     0.15 * (experienceScore || 0) +
-     0.10 * (structureScore || 0)) * contentPenalty
-  );
-
-  // STEP 9: Improvement Suggestions
-  const suggestions = [];
-  
-  // Use JD-extracted missing skills if no role-based ones found
-  const jdMissingSkills = missingSkills.length > 0 ? missingSkills : SKILL_DB.filter(s => jdText.includes(s.toLowerCase()) && !aggregated.skills.map(us => us.toLowerCase()).includes(s.toLowerCase()));
-
-  if (keywordScore < 50 && jdText.length > 50) suggestions.push("Low Keyword Alignment: Identify top terms in JD and integrate them naturally.");
-  if (skillScore < 50) suggestions.push(`Low Skill Match: Consider adding missing technical skills: ${jdMissingSkills.slice(0, 3).join(', ')}`);
-  if (semanticScore < 50) suggestions.push("Low Semantic Similarity: Rewrite project/experience descriptions to better align with the core themes of the job description.");
-  if (experienceScore < 70) suggestions.push("Experience Gap: Highlight transferable skills or specific tools that match the years of expertise required.");
-  if (structureScore < 100) {
-    const missing = [];
-    if (!sections.summary) missing.push("Summary");
-    if (!sections.projects) missing.push("Projects");
-    if (!sections.experience) missing.push("Experience");
-    suggestions.push(`Structure Quality: Add missing sections: ${missing.join(', ')}`);
-  }
-
-  return {
-    atsScore: finalATSScore || 0,
-    keywordScore: Math.round(keywordScore) || 0,
-    skillScore: Math.round(skillScore) || 0,
-    semanticScore: Math.round(semanticScore) || 0,
-    experienceScore: Math.round(experienceScore) || 0,
-    structureScore: Math.round(structureScore) || 0,
-    suggestions,
-    missingSkills: jdMissingSkills
-  };
 };
+

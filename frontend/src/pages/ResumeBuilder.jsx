@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import { saveResume, getResumeData, rewriteDescription } from '../api';
+import { saveResume, getResumeData, enhanceDescription } from '../api';
 
 const ResumeBuilder = () => {
   const [activeTab, setActiveTab] = useState('personal');
@@ -103,13 +103,13 @@ const ResumeBuilder = () => {
     }
   };
 
-  const handleAIRewrite = async (text, callback, idx) => {
+  const handleAIRewrite = async (text, callback, idx, mode = 'experience') => {
     setAiLoading(idx);
     try {
-      const { data } = await rewriteDescription(text);
+      const { data } = await enhanceDescription(text, mode);
       callback(data.result);
     } catch (err) {
-      alert('AI rewrite failed');
+      alert('AI enhance failed');
     } finally {
       setAiLoading(null);
     }
@@ -240,11 +240,21 @@ const ResumeBuilder = () => {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <label className="text-sm text-slate-300">Professional Summary</label>
                 <button
-                  onClick={() => handleAIRewrite(profile.summary, (result) => setProfile({...profile, summary: result}), 'summary')}
-                  className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
-                  disabled={!!aiLoading}
+                  onClick={() => handleAIRewrite(profile.summary, (result) => setProfile({...profile, summary: result}), 'summary', 'summary')}
+                  disabled={!!aiLoading || !profile.summary?.trim()}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                    padding: '0.4rem 0.85rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600,
+                    background: aiLoading === 'summary' ? 'rgba(99,102,241,0.2)' : 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(14,165,233,0.15))',
+                    border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc', cursor: (!!aiLoading || !profile.summary?.trim()) ? 'not-allowed' : 'pointer',
+                    opacity: (!!aiLoading || !profile.summary?.trim()) ? 0.5 : 1, transition: 'all 0.2s ease',
+                  }}
                 >
-                  {aiLoading === 'summary' ? '✨ Rewriting...' : '✨ AI Enhance'}
+                  {aiLoading === 'summary' ? (
+                    <><svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Enhancing...</>
+                  ) : (
+                    <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> AI Enhance</>
+                  )}
                 </button>
               </div>
               <textarea
@@ -343,8 +353,22 @@ const ResumeBuilder = () => {
                 <div style={{ marginTop: '1.25rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                     <label className="text-sm text-slate-300">Description</label>
-                    <button onClick={() => handleAIRewrite(exp.description, (result) => updateItem(setExperience, idx, 'description', result), `exp-${idx}`)} className="text-xs text-indigo-400 hover:text-indigo-300" disabled={!!aiLoading}>
-                      {aiLoading === `exp-${idx}` ? '✨ Rewriting...' : '✨ AI Enhance'}
+                    <button
+                      onClick={() => handleAIRewrite(exp.description, (result) => updateItem(setExperience, idx, 'description', result), `exp-${idx}`, 'experience')}
+                      disabled={!!aiLoading || !exp.description?.trim()}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                        padding: '0.4rem 0.85rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600,
+                        background: aiLoading === `exp-${idx}` ? 'rgba(99,102,241,0.2)' : 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(14,165,233,0.15))',
+                        border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc', cursor: (!!aiLoading || !exp.description?.trim()) ? 'not-allowed' : 'pointer',
+                        opacity: (!!aiLoading || !exp.description?.trim()) ? 0.5 : 1, transition: 'all 0.2s ease',
+                      }}
+                    >
+                      {aiLoading === `exp-${idx}` ? (
+                        <><svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Enhancing...</>
+                      ) : (
+                        <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> AI Enhance</>
+                      )}
                     </button>
                   </div>
                   <textarea className="input-field h-24 resize-none" placeholder="Describe your responsibilities..." value={exp.description} onChange={e => updateItem(setExperience, idx, 'description', e.target.value)} />
@@ -395,8 +419,22 @@ const ResumeBuilder = () => {
                 <div style={{ marginTop: '1.25rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                     <label className="text-sm text-slate-300">Description</label>
-                    <button onClick={() => handleAIRewrite(proj.description, (result) => updateItem(setProjects, idx, 'description', result), `proj-${idx}`)} className="text-xs text-indigo-400 hover:text-indigo-300" disabled={!!aiLoading}>
-                      {aiLoading === `proj-${idx}` ? '✨ Rewriting...' : '✨ AI Enhance'}
+                    <button
+                      onClick={() => handleAIRewrite(proj.description, (result) => updateItem(setProjects, idx, 'description', result), `proj-${idx}`, 'experience')}
+                      disabled={!!aiLoading || !proj.description?.trim()}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                        padding: '0.4rem 0.85rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600,
+                        background: aiLoading === `proj-${idx}` ? 'rgba(99,102,241,0.2)' : 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(14,165,233,0.15))',
+                        border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc', cursor: (!!aiLoading || !proj.description?.trim()) ? 'not-allowed' : 'pointer',
+                        opacity: (!!aiLoading || !proj.description?.trim()) ? 0.5 : 1, transition: 'all 0.2s ease',
+                      }}
+                    >
+                      {aiLoading === `proj-${idx}` ? (
+                        <><svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Enhancing...</>
+                      ) : (
+                        <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> AI Enhance</>
+                      )}
                     </button>
                   </div>
                   <textarea className="input-field h-24 resize-none" placeholder="Describe what this project does..." value={proj.description} onChange={e => updateItem(setProjects, idx, 'description', e.target.value)} />

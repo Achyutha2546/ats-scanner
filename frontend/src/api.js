@@ -16,5 +16,6 @@ export const rewriteDescription = (input) => API.post('/ai/rewrite-description',
 export const uploadProof = (formData) => API.post('/ai/upload-proof', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const getATSScore = (data) => API.post('/ai/ats-score', data);
 export const analyzeATS = (data) => API.post('/ai/ats/analyze', data);
+export const enhanceDescription = (input, mode) => API.post('/ai/enhance-description', { input, mode });
 
 export default API;

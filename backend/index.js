@@ -27,14 +27,30 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-
-mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/ai-resume-builder', {
+const mongoOptions = {
   serverApi: { version: '1', strict: true, deprecationErrors: true }
-})
-  .then(() => {
-    console.log('✅ Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-    });
-  })
-  .catch(err => console.error('❌ MongoDB connection error:', err.message));
+};
+
+const connectToMongo = async () => {
+  const primaryUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/ai-resume-builder';
+  const fallbackUri = 'mongodb://127.0.0.1:27017/ai-resume-builder';
+  const uris = primaryUri === fallbackUri ? [primaryUri] : [primaryUri, fallbackUri];
+
+  for (const uri of uris) {
+    try {
+      await mongoose.connect(uri, mongoOptions);
+      console.log(`✅ Connected to MongoDB at ${uri}`);
+      return;
+    } catch (err) {
+      console.error(`⚠️ MongoDB connection failed for ${uri}:`, err.message);
+    }
+  }
+
+  console.warn('⚠️ MongoDB is unavailable. The server will continue running, but database-backed routes may fail until MongoDB is reachable.');
+};
+
+connectToMongo().finally(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
+});
