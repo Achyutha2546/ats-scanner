@@ -1,0 +1,33 @@
+services:
+  # 1. Backend Web Service (uses Docker)
+  - type: web
+    name: resumeai-backend
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: MONGO_URI
+        sync: false # Requires manual entry in Render Dashboard
+      - key: JWT_SECRET
+        sync: false # Requires manual entry in Render Dashboard
+      - key: OPENAI_API_KEY
+        sync: false # Requires manual entry in Render Dashboard
+
+  # 2. Frontend Static Site
+  - type: web
+    name: resumeai-frontend
+    env: static
+    plan: free
+    region: oregon
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: resumeai-backend
+          property: host
+        # Example format: https://resumeai-backend.onrender.com/api

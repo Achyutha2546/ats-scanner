@@ -1,84 +1,144 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, FileText, CheckCircle, Search, Compass, LayoutTemplate, Monitor } from 'lucide-react';
+import { ArrowRight, FileText, CheckCircle, Search, Compass, LayoutTemplate, Monitor, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Landing = () => {
   const features = [
-    { icon: <FileText size={24} className="text-white" />, title: 'AI Resume Builder', desc: 'Build professional resumes with intelligent content suggestions and dynamic optimization.' },
-    { icon: <CheckCircle size={24} className="text-white" />, title: 'ATS Score Checker', desc: 'Ensure your resume passes automated filters with detailed compatibility analysis.' },
-    { icon: <Search size={24} className="text-white" />, title: 'Skill Gap Analysis', desc: 'Identify missing skills for your target role and get actionable learning recommendations.' },
-    { icon: <Compass size={24} className="text-white" />, title: 'Career Guidance', desc: 'Receive tailored career path suggestions based on your unique experience and skills.' },
-    { icon: <LayoutTemplate size={24} className="text-white" />, title: 'Premium Templates', desc: 'Select from meticulously crafted templates designed for maximum readability and impact.' },
-    { icon: <Monitor size={24} className="text-white" />, title: 'Portfolio Generator', desc: 'Automatically generate a responsive, beautiful portfolio website from your resume data.' },
+    { icon: <FileText size={24} />, title: 'AI Resume Builder', desc: 'Craft professional resumes with intelligent content suggestions and dynamic ATS optimization.', span: 'md:col-span-2' },
+    { icon: <CheckCircle size={24} />, title: 'ATS Score Checker', desc: 'Ensure your resume passes automated filters.', span: 'md:col-span-1' },
+    { icon: <Search size={24} />, title: 'Skill Gap Analysis', desc: 'Identify missing skills for your target role.', span: 'md:col-span-1' },
+    { icon: <Compass size={24} />, title: 'Career Guidance', desc: 'Receive tailored career path suggestions based on your unique experience and skills.', span: 'md:col-span-2' },
+    { icon: <LayoutTemplate size={24} />, title: 'Premium Templates', desc: 'Select from meticulously crafted templates designed for maximum readability and impact.', span: 'md:col-span-2' },
+    { icon: <Monitor size={24} />, title: 'Portfolio Generator', desc: 'Auto-generate a responsive portfolio website.', span: 'md:col-span-1' },
   ];
 
+  const FADE_UP = {
+    hidden: { opacity: 0, y: 30 },
+    show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 80, damping: 20 } }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-white/20">
+    <div className="min-h-screen bg-[#030712] text-slate-200 font-sans selection:bg-indigo-500/30 overflow-hidden">
       
+      {/* Background Effects */}
+      <div className="absolute top-0 inset-x-0 h-screen overflow-hidden pointer-events-none">
+        <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-indigo-600/15 blur-[120px] rounded-full"></div>
+      </div>
+
       {/* Navbar */}
-      <nav className="w-full px-6 py-6 flex items-center justify-between max-w-7xl mx-auto">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white text-slate-950 flex items-center justify-center rounded-lg font-bold">
-            <FileText size={18} strokeWidth={2.5} />
+      <motion.nav 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative z-20 w-full px-6 py-6 flex items-center justify-between max-w-7xl mx-auto"
+      >
+        <div className="flex items-center gap-3 group cursor-pointer">
+          <div className="w-9 h-9 bg-indigo-500 text-white flex items-center justify-center rounded-xl font-bold shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+            <Sparkles size={18} strokeWidth={2.5} />
           </div>
-          <span className="text-xl font-semibold tracking-tight text-white">ResumeAI</span>
+          <span className="text-xl font-bold tracking-tight text-white">ResumeAI</span>
         </div>
         <div className="flex items-center gap-6">
           <Link to="/login" className="text-sm font-medium text-slate-400 hover:text-white transition-colors">Log in</Link>
-          <Link to="/register" className="text-sm font-medium bg-white text-slate-950 px-5 py-2.5 rounded-full hover:bg-slate-200 transition-colors">Start building</Link>
+          <Link to="/register" className="text-sm font-medium bg-white text-slate-950 px-5 py-2.5 rounded-full hover:bg-slate-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+            Start building
+          </Link>
         </div>
-      </nav>
+      </motion.nav>
 
       {/* Hero Section */}
-      <section className="w-full px-6 pt-32 pb-24 text-center max-w-4xl mx-auto">
-        <div className="slide-up">
-          <h1 className="text-6xl md:text-8xl font-medium text-white mb-8 tracking-tighter leading-[1.1]">
-            The definitive resume platform.
-          </h1>
-          <p className="text-xl md:text-2xl text-slate-400 max-w-2xl mx-auto mb-12 leading-relaxed font-light">
-            Craft ATS-optimized resumes, discover critical skill gaps, and generate stunning portfolios with our advanced AI engine.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center gap-4 justify-center">
-            <Link to="/register" className="inline-flex items-center gap-2 bg-white text-slate-950 text-lg font-medium px-8 py-4 rounded-full hover:bg-slate-200 transition-colors">
-              Start building for free
-              <ArrowRight size={20} />
+      <section className="relative z-10 w-full px-6 pt-24 pb-20 text-center max-w-5xl mx-auto flex flex-col items-center">
+        <motion.div
+          initial="hidden"
+          animate="show"
+          variants={{
+            hidden: {},
+            show: { transition: { staggerChildren: 0.15 } }
+          }}
+          className="flex flex-col items-center"
+        >
+          <motion.div variants={FADE_UP} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-sm font-medium mb-8">
+            <Sparkles size={14} />
+            <span className="tracking-wide">AI-Powered Career Engine v2.0</span>
+          </motion.div>
+          
+          <motion.h1 variants={FADE_UP} className="text-5xl md:text-7xl font-semibold text-white mb-8 tracking-tighter leading-[1.05] max-w-4xl">
+            Land your dream job with <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">precision.</span>
+          </motion.h1>
+          
+          <motion.p variants={FADE_UP} className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+            Automate your job search. Craft ATS-optimized resumes, discover critical skill gaps, and generate stunning portfolios instantly.
+          </motion.p>
+          
+          <motion.div variants={FADE_UP} className="flex flex-col sm:flex-row items-center gap-4 justify-center w-full">
+            <Link to="/register" className="group flex items-center justify-center gap-2 bg-indigo-600 text-white text-base font-medium px-8 py-3.5 rounded-full hover:bg-indigo-500 transition-all w-full sm:w-auto shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5">
+              Build your resume
+              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </Link>
-          </div>
-        </div>
+            <Link to="/login" className="flex items-center justify-center gap-2 bg-slate-800 text-white text-base font-medium px-8 py-3.5 rounded-full hover:bg-slate-700 border border-slate-700 transition-colors w-full sm:w-auto">
+              View Demo
+            </Link>
+          </motion.div>
+        </motion.div>
       </section>
 
-      {/* Divider */}
-      <div className="w-full max-w-7xl mx-auto px-6">
-        <div className="h-px w-full bg-white/10"></div>
-      </div>
-
-      {/* Features Grid */}
-      <section className="w-full px-6 py-32 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-          <h2 className="text-4xl md:text-5xl font-medium tracking-tight text-white max-w-xl">
-            Everything you need to advance your career.
+      {/* Bento Grid Features Section */}
+      <section className="relative z-10 w-full px-6 py-20 max-w-6xl mx-auto">
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.7 }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-white mb-6">
+            A complete career toolkit.
           </h2>
-          <p className="text-lg text-slate-400 max-w-md font-light leading-relaxed">
-            A cohesive suite of tools designed to remove friction from the job application process and elevate your professional presence.
+          <p className="text-lg text-slate-400 max-w-2xl mx-auto font-light">
+            Everything you need to stand out to recruiters, bypass ATS filters, and secure interviews faster than ever before.
           </p>
-        </div>
+        </motion.div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {features.map((f, i) => (
-            <div key={i} className="group slide-up" style={{ animationDelay: `${i * 0.1}s` }}>
-              <div className="inline-block p-3 bg-white/5 rounded-2xl border border-white/10 mb-6 group-hover:bg-white/10 transition-colors">
-                {f.icon}
+            <motion.div 
+              key={i} 
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1, duration: 0.5 }}
+              className={`group relative overflow-hidden rounded-3xl bg-slate-900 border border-slate-800 p-8 hover:bg-slate-800/80 transition-colors ${f.span}`}
+            >
+              {/* Subtle hover gradient inside card */}
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-transparent to-purple-500/0 group-hover:from-indigo-500/5 group-hover:to-purple-500/5 transition-colors" />
+              
+              <div className="relative z-10">
+                <div className="inline-flex p-3 bg-slate-800 rounded-xl text-indigo-400 mb-6 group-hover:scale-110 group-hover:bg-indigo-500/20 transition-all duration-300">
+                  {f.icon}
+                </div>
+                <h3 className="text-2xl font-semibold text-white mb-3 tracking-tight">{f.title}</h3>
+                <p className="text-slate-400 leading-relaxed font-light text-base md:text-lg">{f.desc}</p>
               </div>
-              <h3 className="text-xl font-medium text-white mb-3 tracking-tight">{f.title}</h3>
-              <p className="text-slate-400 leading-relaxed font-light">{f.desc}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
 
+      {/* CTA Footer */}
+      <section className="relative z-10 w-full px-6 py-24 mt-12 border-t border-slate-800/50 bg-slate-900/30 text-center">
+        <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-white mb-8">
+          Ready to get hired?
+        </h2>
+        <Link to="/register" className="inline-flex items-center gap-2 bg-white text-slate-950 text-lg font-medium px-10 py-4 rounded-full hover:bg-slate-200 transition-colors hover:scale-105 transform duration-300 shadow-xl shadow-white/10">
+          Create your profile today
+          <ArrowRight size={20} />
+        </Link>
+      </section>
+      
       {/* Minimal Footer */}
-      <footer className="w-full px-6 py-12 text-center text-slate-600 text-sm font-light">
-        &copy; 2026 ResumeAI. Crafted with precision.
+      <footer className="w-full px-6 py-8 text-center text-slate-600 text-sm font-light border-t border-slate-800/50 bg-[#030712]">
+        &copy; 2026 ResumeAI. Crafted with precision for the modern professional.
       </footer>
     </div>
   );
