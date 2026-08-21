@@ -31,7 +31,7 @@ const Landing = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-20 w-full px-6 py-6 flex items-center justify-between max-w-7xl mx-auto"
+        className="relative z-20 w-full px-8 py-6 flex items-center justify-between max-w-[95%] xl:max-w-screen-2xl mx-auto"
       >
         <div className="flex items-center gap-3 group cursor-pointer">
           <div className="w-9 h-9 bg-indigo-500 text-white flex items-center justify-center rounded-xl font-bold shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
@@ -48,7 +48,7 @@ const Landing = () => {
       </motion.nav>
 
       {/* Hero Section */}
-      <section className="relative z-10 w-full px-6 min-h-[75vh] flex flex-col justify-center items-center text-center max-w-5xl mx-auto">
+      <section className="relative z-10 w-full px-8 min-h-[75vh] flex flex-col justify-center items-center text-center max-w-[90%] xl:max-w-7xl mx-auto">
         <motion.div
           initial="hidden"
           animate="show"
@@ -63,11 +63,11 @@ const Landing = () => {
             <span className="tracking-wide">AI-Powered Career Engine v2.0</span>
           </motion.div>
           
-          <motion.h1 variants={FADE_UP} className="text-5xl md:text-7xl font-semibold text-white mb-8 tracking-tighter leading-[1.05] max-w-4xl mx-auto text-center">
+          <motion.h1 variants={FADE_UP} className="text-5xl md:text-7xl lg:text-8xl font-semibold text-white mb-8 tracking-tighter leading-[1.05] max-w-5xl mx-auto text-center">
             Land your dream job with <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">precision.</span>
           </motion.h1>
           
-          <motion.p variants={FADE_UP} className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed font-light text-center">
+          <motion.p variants={FADE_UP} className="text-lg md:text-xl lg:text-2xl text-slate-400 max-w-4xl mx-auto mb-10 leading-relaxed font-light text-center">
             Automate your job search. Craft ATS-optimized resumes, discover critical skill gaps, and generate stunning portfolios instantly.
           </motion.p>
           
@@ -84,7 +84,7 @@ const Landing = () => {
       </section>
 
       {/* Bento Grid Features Section */}
-      <section className="relative z-10 w-full px-6 py-20 max-w-6xl mx-auto">
+      <section className="relative z-10 w-full px-8 py-20 max-w-[95%] xl:max-w-screen-2xl mx-auto">
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -92,15 +92,15 @@ const Landing = () => {
           transition={{ duration: 0.7 }}
           className="text-center flex flex-col items-center justify-center mb-16"
         >
-          <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-white mb-6 text-center">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-semibold tracking-tight text-white mb-6 text-center">
             A complete career toolkit.
           </h2>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto font-light text-center">
+          <p className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto font-light text-center">
             Everything you need to stand out to recruiters, bypass ATS filters, and secure interviews faster than ever before.
           </p>
         </motion.div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
           {features.map((f, i) => (
             <motion.div 
               key={i} 
