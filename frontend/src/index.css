@@ -1,5 +1,4 @@
 @import "tailwindcss";
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @theme {
@@ -16,6 +15,7 @@
   --color-success: #10b981;
   --color-danger: #ef4444;
   --color-warning: #f59e0b;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 * {
@@ -25,7 +25,7 @@
 }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
   background: #0f172a;
   color: #e2e8f0;
   min-height: 100vh;
@@ -121,7 +121,7 @@ body {
   border-radius: 10px;
   color: #e2e8f0;
   font-size: 0.95rem;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   transition: all 0.3s ease;
   outline: none;
 }
