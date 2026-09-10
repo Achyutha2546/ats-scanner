@@ -60,20 +60,29 @@ export const cleanAndLemmatize = (text) => {
 // Skill Synonyms Mapping
 const SKILL_SYNONYMS = {
   'html': ['html5', 'html', 'xhtml'],
-  'css': ['css3', 'css', 'scss', 'sass'],
-  'javascript': ['js', 'javascript', 'es6', 'ecmascript'],
-  'react': ['react.js', 'reactjs', 'react'],
+  'css': ['css3', 'css', 'scss', 'sass', 'less', 'flexbox', 'grid'],
+  'javascript': ['js', 'javascript', 'es6', 'ecmascript', 'js/ts'],
+  'typescript': ['ts', 'typescript'],
+  'react': ['react.js', 'reactjs', 'react', 'react native'],
   'node.js': ['nodejs', 'node.js', 'node'],
   'mongodb': ['mongo', 'mongodb'],
-  'rest api': ['rest', 'restful', 'rest api'],
+  'rest api': ['rest', 'restful', 'rest api', 'api', 'apis'],
   'machine learning': ['ml', 'machine learning'],
-  'ui/ux': ['ui', 'ux', 'ui/ux', 'design'],
-  'postgresql': ['postgres', 'postgresql'],
+  'ui/ux': ['ui', 'ux', 'ui/ux', 'design', 'user experience', 'user interface'],
+  'postgresql': ['postgres', 'postgresql', 'psql'],
   'next.js': ['nextjs', 'next.js', 'next'],
-  'express': ['expressjs', 'express.js', 'express']
+  'express': ['expressjs', 'express.js', 'express'],
+  'python': ['python3', 'py', 'python'],
+  'docker': ['containerization', 'containers', 'docker'],
+  'kubernetes': ['k8s', 'kubernetes'],
+  'aws': ['amazon web services', 'aws'],
+  'git': ['github', 'gitlab', 'version control', 'git'],
+  'vue': ['vue.js', 'vuejs', 'vue'],
+  'angular': ['angularjs', 'angular']
 };
 
 const normalizeSkill = (skill) => {
+  if (!skill) return '';
   const s = skill.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
   for (const [canonical, variations] of Object.entries(SKILL_SYNONYMS)) {
     if (variations.some(v => v.toLowerCase().replace(/[^a-z0-9]/g, '') === s)) {
@@ -117,8 +126,9 @@ export const aggregateResumeData = (data) => {
   const projectText = projects.map(proj => `${proj.title || ''} ${proj.description || ''} ${(proj.technologies || []).join(' ')}`).join(' ');
   const experienceText = experience.map(exp => `${exp.role || ''} ${exp.company || ''} ${exp.description || ''}`).join(' ');
   const eduText = education.map(edu => `${edu.degree || ''} ${edu.institution || ''}`).join(' ');
+  const certText = certifications.map(cert => `${cert.title || ''} ${cert.organization || ''} ${cert.description || ''}`).join(' ');
 
-  const contentText = `${p.summary || ''} ${skills.join(' ')} ${projectText} ${experienceText} ${eduText} ${certifications.map(c => c.title || '').join(' ')}`.trim();
+  const contentText = `${p.summary || ''} ${skills.join(' ')} ${projectText} ${experienceText} ${eduText} ${certText}`.trim();
 
   return {
     name: p.name || '',

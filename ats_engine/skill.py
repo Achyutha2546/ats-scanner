@@ -14,18 +14,24 @@ ROLE_SKILLS_MAP = {
 
 # Skill synonyms for better matching
 SKILL_SYNONYMS = {
-  'html': ['html5', 'xhtml'],
-  'css': ['css3', 'scss', 'sass'],
-  'javascript': ['js', 'es6', 'ecmascript'],
-  'react': ['react.js', 'reactjs'],
-  'node.js': ['nodejs', 'node'],
-  'mongodb': ['mongo'],
-  'rest api': ['rest', 'restful', 'apis'],
-  'machine learning': ['ml'],
-  'ui/ux': ['ui', 'ux', 'design'],
-  'postgresql': ['postgres'],
-  'next.js': ['nextjs', 'next'],
-  'express': ['expressjs', 'express.js']
+  'html': ['html5', 'html', 'xhtml'],
+  'css': ['css3', 'css', 'scss', 'sass', 'less', 'flexbox', 'grid'],
+  'javascript': ['js', 'es6', 'ecmascript', 'javascript', 'js/ts'],
+  'typescript': ['ts', 'typescript'],
+  'react': ['react.js', 'reactjs', 'react', 'react native'],
+  'node.js': ['nodejs', 'node', 'node.js'],
+  'mongodb': ['mongo', 'mongodb'],
+  'rest api': ['rest', 'restful', 'apis', 'api', 'rest api', 'rest apis'],
+  'machine learning': ['ml', 'machine learning'],
+  'ui/ux': ['ui', 'ux', 'design', 'ui/ux designer', 'ui/ux'],
+  'postgresql': ['postgres', 'postgresql', 'psql'],
+  'next.js': ['nextjs', 'next.js', 'next'],
+  'express': ['expressjs', 'express.js', 'express'],
+  'python': ['python3', 'py', 'python'],
+  'docker': ['containerization', 'containers', 'docker'],
+  'kubernetes': ['k8s', 'kubernetes'],
+  'aws': ['amazon web services', 'aws'],
+  'git': ['github', 'gitlab', 'version control', 'git']
 }
 
 def normalize_skill(skill):
@@ -36,11 +42,11 @@ def normalize_skill(skill):
     
     # Check for direct synonyms
     for canonical, variations in SKILL_SYNONYMS.items():
-        if s in variations or s_cleaned in [v.replace(' ', '').replace('.', '') for v in variations]:
+        if s in variations or s_cleaned in [v.replace(' ', '').replace('.', '').replace('/', '') for v in variations]:
             return canonical
         if s == canonical:
             return canonical
-    return s
+    return s_cleaned or s
 
 def calculate_skill_score(user_skills, jd_text, target_role):
     """
@@ -70,29 +76,25 @@ def calculate_skill_score(user_skills, jd_text, target_role):
         # Default skill set if nothing found
         return {"score": 0.0, "matched": [], "missing": []}
 
-    user_skills_norm = [normalize_skill(s) for s in user_skills if s]
+    # Deduplicate required_skills based on normalized canonical form (e.g. HTML & HTML5)
+    canonical_req_map = {}
+    for req in required_skills:
+        norm = normalize_skill(req)
+        if norm not in canonical_req_map:
+            canonical_req_map[norm] = req
+
+    user_skills_norm = set([normalize_skill(s) for s in user_skills if s])
     matched_skills = []
     missing_skills = []
 
-    for req in required_skills:
-        norm_req = normalize_skill(req)
-        # Check if the required skill or any of its variations is in the user's skill set
-        found = False
+    for norm_req, original_req in canonical_req_map.items():
         if norm_req in user_skills_norm:
-            found = True
+            matched_skills.append(original_req)
         else:
-            # Check variations of required skill
-            synonyms = SKILL_SYNONYMS.get(norm_req, [])
-            if any(normalize_skill(syn) in user_skills_norm for syn in synonyms):
-                found = True
-        
-        if found:
-            matched_skills.append(req)
-        else:
-            missing_skills.append(req)
+            missing_skills.append(original_req)
 
     # Calculate score
-    score = (len(matched_skills) / len(required_skills)) * 100
+    score = (len(matched_skills) / len(canonical_req_map)) * 100 if canonical_req_map else 0.0
     
     return {
         "score": float(f"{score:.2f}"),

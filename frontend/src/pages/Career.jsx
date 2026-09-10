@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { getResumeData } from '../api';
+import { isSkillMatch } from '../utils/skillNormalizer';
 
 const careerPaths = {
   'react': ['Frontend Developer', 'Full Stack Developer', 'React Developer', 'UI Engineer'],
@@ -67,14 +68,13 @@ const Career = () => {
   const generateRecommendations = (skills) => {
     const roleScores = {};
     
-    // Calculate match scores for all roles in roleSkillMap
     Object.entries(roleSkillMap).forEach(([role, requiredSkills]) => {
       const matched = requiredSkills.filter(req => 
-        skills.some(userSkill => userSkill.includes(req) || req.includes(userSkill))
+        skills.some(userSkill => isSkillMatch(userSkill, req))
       );
       const score = Math.round((matched.length / requiredSkills.length) * 100);
       const missing = requiredSkills.filter(req => 
-        !skills.some(userSkill => userSkill.includes(req) || req.includes(userSkill))
+        !skills.some(userSkill => isSkillMatch(userSkill, req))
       );
       
       roleScores[role] = {

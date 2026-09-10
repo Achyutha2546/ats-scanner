@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { getResumeData } from '../api';
+import { isSkillMatch } from '../utils/skillNormalizer';
 
 const roleSkillMap = {
   'Frontend Developer': ['HTML', 'CSS', 'JavaScript', 'React', 'Git', 'REST API'],
@@ -28,8 +29,8 @@ const SkillGap = () => {
   const analyze = () => {
     if (!selectedRole) return;
     const required = roleSkillMap[selectedRole] || [];
-    const matched = required.filter(s => userSkills.some(us => us.includes(s) || s.includes(us)));
-    const missing = required.filter(s => !userSkills.some(us => us.includes(s) || s.includes(us)));
+    const matched = required.filter(s => userSkills.some(us => isSkillMatch(us, s)));
+    const missing = required.filter(s => !userSkills.some(us => isSkillMatch(us, s)));
     const matchPct = Math.round((matched.length / required.length) * 100);
     setAnalysis({ matched, missing, matchPct, required });
   };
