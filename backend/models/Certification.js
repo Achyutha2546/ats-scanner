@@ -5,6 +5,7 @@ const certificationSchema = new mongoose.Schema({
   title: { type: String, required: true },
   organization: { type: String },
   year: { type: String },
+  description: { type: String, required: false },
   proofUrl: { type: String, required: false },
   proofText: { type: String, required: false }
 });

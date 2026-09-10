@@ -222,11 +222,16 @@ const Portfolio = () => {
                           </h2>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             {resume.certifications.map((cert, i) => (
-                              <div key={i} className="bg-white/5 border border-white/5 rounded-xl p-4 flex items-center gap-4">
-                                <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-400">📜</div>
+                              <div key={i} className="bg-white/5 border border-white/5 rounded-xl p-4 flex items-start gap-4">
+                                <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-400 mt-0.5">📜</div>
                                 <div>
                                   <div className="text-white text-sm font-bold">{cert.title}</div>
-                                  <div className="text-slate-500 text-xs">{cert.organization} ({cert.year})</div>
+                                  <div className="text-slate-400 text-xs mb-1">{cert.organization} ({cert.year})</div>
+                                  {cert.description && (
+                                    <div className="text-slate-300 text-xs leading-relaxed mt-1">
+                                      {cert.description}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             ))}

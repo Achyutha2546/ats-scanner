@@ -13,7 +13,7 @@ const ResumeBuilder = () => {
   const [education, setEducation] = useState([{ degree: '', institution: '', year: '', cgpa: '' }]);
   const [experience, setExperience] = useState([{ company: '', role: '', duration: '', description: '' }]);
   const [projects, setProjects] = useState([{ title: '', description: '', technologies: '', githubLink: '' }]);
-  const [certifications, setCertifications] = useState([{ title: '', organization: '', year: '' }]);
+  const [certifications, setCertifications] = useState([{ title: '', organization: '', year: '', description: '' }]);
 
   const roles = [
     'Software Developer', 'Frontend Developer', 'Backend Developer', 'Full Stack Developer',
@@ -458,7 +458,11 @@ const ResumeBuilder = () => {
                   <div><label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>Title</label><input className="input-field" placeholder="AWS Certified Developer" value={cert.title} onChange={e => updateItem(setCertifications, idx, 'title', e.target.value)} /></div>
                   <div><label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>Organization</label><input className="input-field" placeholder="Amazon" value={cert.organization} onChange={e => updateItem(setCertifications, idx, 'organization', e.target.value)} /></div>
                   <div><label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>Year</label><input className="input-field" placeholder="2024" value={cert.year} onChange={e => updateItem(setCertifications, idx, 'year', e.target.value)} /></div>
-                  <div style={{ gridColumn: 'span 3' }} className="mt-2">
+                  <div style={{ gridColumn: 'span 3' }}>
+                    <label className="block text-sm text-slate-300" style={{ marginBottom: '0.5rem' }}>Description</label>
+                    <textarea className="input-field" rows="2" placeholder="Brief summary of skills, modules covered, or certification highlights..." value={cert.description || ''} onChange={e => updateItem(setCertifications, idx, 'description', e.target.value)} />
+                  </div>
+                  <div style={{ gridColumn: 'span 3' }} className="mt-1">
                     <label className="block text-sm text-slate-500 mb-2">Upload Certificate (Proof)</label>
                     <div className="flex items-center gap-4">
                       <input type="file" onChange={e => handleProofUpload(e, setCertifications, `cert-${idx}`)} className="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-400 hover:file:bg-emerald-500/20 cursor-pointer" />
@@ -469,7 +473,7 @@ const ResumeBuilder = () => {
                 </div>
               </div>
             ))}
-            <button onClick={() => addItem(setCertifications, { title: '', organization: '', year: '' })} className="btn-secondary w-full justify-center">+ Add Certification</button>
+            <button onClick={() => addItem(setCertifications, { title: '', organization: '', year: '', description: '' })} className="btn-secondary w-full justify-center">+ Add Certification</button>
           </div>
         )}
 

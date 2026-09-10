@@ -137,9 +137,16 @@ const Templates = () => {
           <div key="certs" className="section" style={{ marginBottom: '2rem' }}>
             <h2 style={{ fontSize: '1rem', fontWeight: 700, color, borderBottom: `2px solid ${color}`, paddingBottom: '0.25rem', marginBottom: '1rem', textAlign: center ? 'center' : 'left' }}>CERTIFICATIONS</h2>
             {resume.certifications.map((cert, i) => (
-              <p key={i} style={{ fontSize: '0.875rem', marginBottom: '0.4rem' }}>
-                <strong>{cert.title}</strong> — {cert.organization} ({cert.year})
-              </p>
+              <div key={i} style={{ marginBottom: '0.6rem' }}>
+                <p style={{ fontSize: '0.875rem', marginBottom: '0.15rem' }}>
+                  <strong>{cert.title}</strong> — {cert.organization} ({cert.year})
+                </p>
+                {cert.description && (
+                  <p style={{ fontSize: '0.8rem', opacity: 0.8, color: '#475569', marginTop: '0.1rem' }}>
+                    {cert.description}
+                  </p>
+                )}
+              </div>
             ))}
           </div>
         );
