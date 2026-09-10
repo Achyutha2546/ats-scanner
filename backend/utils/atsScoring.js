@@ -284,9 +284,8 @@ export const calculateATSScore = async (resumeDataRaw, jobDescriptionRaw, explic
 
         const result = JSON.parse(stdout);
         
-        // Map Python results to expected frontend schema if necessary
-        // The requested fields are:
-        // { score, keyword_score, semantic_score, skill_score, evidence_score, matched_skills, missing_skills, suggestions, role_ranking }
+        const secCount = Object.values(aggregated.sections || {}).filter(Boolean).length;
+        const structureScore = Math.round((secCount / 5) * 100);
         
         return {
             atsScore: result.score || 0,
@@ -297,8 +296,11 @@ export const calculateATSScore = async (resumeDataRaw, jobDescriptionRaw, explic
             semantic_score: result.semantic_score || 0,
             skillScore: result.skill_score || 0,
             skill_score: result.skill_score || 0,
+            experienceScore: result.evidence_score || 0,
             evidenceScore: result.evidence_score || 0,
             evidence_score: result.evidence_score || 0,
+            structureScore: structureScore,
+            structure_score: structureScore,
             matchedSkills: result.matched_skills || [],
             matched_skills: result.matched_skills || [],
             missingSkills: result.missing_skills || [],
@@ -312,13 +314,23 @@ export const calculateATSScore = async (resumeDataRaw, jobDescriptionRaw, explic
         return {
             atsScore: 0,
             score: 0,
+            keywordScore: 0,
             keyword_score: 0,
+            semanticScore: 0,
             semantic_score: 0,
+            skillScore: 0,
             skill_score: 0,
+            experienceScore: 0,
+            evidenceScore: 0,
             evidence_score: 0,
+            structureScore: 0,
+            structure_score: 0,
+            matchedSkills: [],
             matched_skills: [],
+            missingSkills: [],
             missing_skills: [],
             suggestions: ["Error calculating score. Please try again later."],
+            roleRanking: [],
             role_ranking: []
         };
     }

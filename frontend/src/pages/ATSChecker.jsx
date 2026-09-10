@@ -49,17 +49,22 @@ const ATSChecker = () => {
     }
   };
 
-  const ScoreBar = ({ label, score, color }) => (
-    <div className="mb-4">
-      <div className="flex justify-between text-sm mb-2">
-        <span className="text-slate-300">{label}</span>
-        <span className={`font-semibold ${score >= 70 ? 'text-emerald-400' : score >= 40 ? 'text-amber-400' : 'text-red-400'}`}>{(score || 0)}%</span>
+  const ScoreBar = ({ label, score, color }) => {
+    const validScore = typeof score === 'number' && !isNaN(score) ? Math.min(Math.max(score, 0), 100) : 0;
+    return (
+      <div className="mb-4">
+        <div className="flex justify-between text-sm mb-2">
+          <span className="text-slate-300">{label}</span>
+          <span className={`font-semibold ${validScore >= 70 ? 'text-emerald-400' : validScore >= 40 ? 'text-amber-400' : 'text-red-400'}`}>
+            {Math.round(validScore)}%
+          </span>
+        </div>
+        <div className="w-full h-2.5 bg-slate-700/50 rounded-full overflow-hidden">
+          <div className={`h-full rounded-full transition-all duration-1000 ${color}`} style={{ width: `${validScore}%` }}></div>
+        </div>
       </div>
-      <div className="w-full h-2.5 bg-slate-700/50 rounded-full overflow-hidden">
-        <div className={`h-full rounded-full transition-all duration-1000 ${color}`} style={{ width: `${score}%` }}></div>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen flex" style={{ background: '#0f172a' }}>
